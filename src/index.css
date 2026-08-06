@@ -1,0 +1,71 @@
+
+  @font-face {
+    font-family: 'Pryvat Sans UI';
+    src: url('/uploads/PryvatSansUIVF.ttf') format('truetype-variations');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  html, body { overscroll-behavior: none; overflow: hidden; }
+  :root {
+    --header: radial-gradient(110.8% 92.9% at 50% 44.4%, rgba(13,13,15,1) 0%, rgba(13,13,15,0.98) 12%, rgba(13,13,15,0.86) 24%, rgba(13,13,15,0.7) 36%, rgba(13,13,15,0.5) 48%, rgba(13,13,15,0.32) 60%, rgba(13,13,15,0.18) 72%, rgba(13,13,15,0.07) 86%, rgba(13,13,15,0) 100%), radial-gradient(135% 62% at 50% -6%, rgba(46,134,104,0.42) 0%, rgba(42,124,96,0.28) 30%, rgba(36,104,82,0.14) 56%, rgba(30,88,70,0.04) 78%, rgba(30,88,70,0) 100%), linear-gradient(180deg, #0f3529 0%, #0e2f25 11%, #0e2921 22%, #0d231d 33%, #0d1e1a 44%, #0d1917 55%, #0d1615 66%, #0e1213 77%, #0e1011 88%, #0e0e10 100%);
+    --bg: #0e0e10; --bgA: rgba(14,14,16,0.7); --bgA0: rgba(14,14,16,0); --bgA94: rgba(14,14,16,0.94);
+    --surface: #1c1c1e; --ctrl: #1f1f22; --ctrl0: rgba(31,31,34,0); --thumb: #48484a; --badge: #2c2c2e; --seg-off: #3a3a3c;
+    --text: rgba(255,255,255,0.92); --text2: rgba(255,255,255,0.56); --text3: #9a9aa0; --text4: rgba(255,255,255,0.45);
+    --text-hi: #f2f2f7; --glyph: #d0d0d6;
+    --div: rgba(255,255,255,0.1); --div2: rgba(255,255,255,0.12); --div3: rgba(255,255,255,0.14); --div4: rgba(255,255,255,0.08);
+    --sh: rgba(0,0,0,0.55); --sh2: rgba(0,0,0,0.5);
+    --accent: #5cc12c; --accent-tint: rgba(92,193,44,0.2); --income: #30d158; --brand-black: #2f2f33; --status: #e6e6ea;
+  }
+  [data-theme="light"] {
+    --header: radial-gradient(110.8% 92.9% at 50% 44.4%, rgba(245,245,245,1) 0%, rgba(245,245,245,0.96) 14%, rgba(245,245,245,0.74) 28%, rgba(245,245,245,0.5) 42%, rgba(245,245,245,0.29) 56%, rgba(245,245,245,0.13) 70%, rgba(245,245,245,0.04) 84%, rgba(245,245,245,0) 100%), radial-gradient(122% 68% at 50% -6%, rgba(92,193,44,0.62) 0%, rgba(86,182,42,0.4) 38%, rgba(78,166,38,0.17) 66%, rgba(78,166,38,0) 100%), linear-gradient(180deg, #b7e2a6 0%, #c3e6b4 11%, #cfeac2 22%, #daeecf 33%, #e3f1da 44%, #eaf3e3 55%, #eff4ea 66%, #f3f5f1 77%, #f5f5f4 88%, #f5f5f5 100%);
+    --bg: #f5f5f5; --bgA: rgba(245,245,245,0.705); --bgA0: rgba(245,245,245,0); --bgA94: rgba(245,245,245,0.92);
+    --surface: #ffffff; --ctrl: #e2e2e2; --ctrl0: rgba(226,226,226,0); --thumb: #ffffff; --badge: #ffffff; --seg-off: #d4d4d4;
+    --text: rgba(0,0,0,0.87); --text2: rgba(0,0,0,0.54); --text3: #636363; --text4: rgba(0,0,0,0.45);
+    --text-hi: #212121; --glyph: #171717;
+    --div: rgba(0,0,0,0.12); --div2: rgba(0,0,0,0.18); --div3: rgba(0,0,0,0.22); --div4: rgba(0,0,0,0.08);
+    --sh: rgba(0,0,0,0.15); --sh2: rgba(0,0,0,0.078);
+    --accent: #3faa0b; --accent-tint: rgba(78,165,36,0.12); --income: #23a527; --brand-black: #0b0b0b; --status: #1a1a1c;
+  }
+  @keyframes pushInR { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes pushOutR { from { transform: translateX(0); } to { transform: translateX(100%); } }
+  @keyframes pushInL { from { transform: translateX(-24%); } to { transform: translateX(0); } }
+  @keyframes pushOutL { from { transform: translateX(0); } to { transform: translateX(-24%); } }
+  body { margin: 0; min-height: 100vh; background: #0a0a0b; background-image: radial-gradient(72% 52% at 50% 44%, #17181a 0%, #121314 42%, #0a0a0b 100%); background-attachment: fixed; display: flex; align-items: center; justify-content: center; font-family: 'Pryvat Sans UI', sans-serif; font-synthesis: none; }
+  #root { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  button, input, select, textarea { font-family: inherit; font-size: inherit; font-weight: inherit; font-synthesis: none; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent); }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  @property --sweep { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  @keyframes fillUp { from { transform: scaleY(0); } }
+  @keyframes growUpA { from { scale: 1 0; } to { scale: 1 1; } }
+  @keyframes growUpB { from { scale: 1 0; } to { scale: 1 1; } }
+  @keyframes growUpC { from { scale: 1 0; } to { scale: 1 1; } }
+  @keyframes tickDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes sheetIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes listIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes listOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(8px); } }
+  @keyframes iconIn { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+  @keyframes pctIn { from { opacity: 0; translate: 0 -10px; } to { opacity: 1; translate: 0 0; } }
+  @keyframes drawDownA { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes drawDownB { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes drawDownC { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes badgeFadeA { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes digitInA { from { opacity: 0; transform: translateY(0.16em); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes digitInB { from { opacity: 0; transform: translateY(0.16em); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes labelFadeA { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes labelFadeB { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes badgeFadeB { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ringSweep { from { --sweep: 0deg; } to { --sweep: 360deg; } }
+  [data-dragging="1"] [data-avg] { opacity: 0; }
+  button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  @keyframes centreIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
+
+/* pressed / hover states lifted out of the design component */
+.ps0:active { opacity: 0.55 !important; }
+.ps1:active { transform: scale(0.98) !important; opacity: 0.82 !important; }
+.ps2:active { transform: scale(0.9) !important; opacity: 0.7 !important; }
+.ps3:active { transform: scale(0.88) !important; }
+.ps4:active { transform: scale(0.96) !important; opacity: 0.8 !important; }
