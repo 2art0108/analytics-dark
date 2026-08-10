@@ -1,5 +1,5 @@
 {
-  "name": "privat-analytics-prototype",
+  "name": "privat-analytics",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -8,12 +8,7 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.0"
   }
 }
