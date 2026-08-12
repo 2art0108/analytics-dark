@@ -40,6 +40,8 @@
   }
   @keyframes pushInR { from { transform: translateX(100%); } to { transform: translateX(0); } }
   @keyframes pushOutR { from { transform: translateX(0); } to { transform: translateX(100%); } }
+  @keyframes glowIn { from { opacity: 0; transform: scale(0.84); } to { opacity: 1; transform: scale(1); } }
+  @keyframes glowOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
   @keyframes pushInL { from { transform: translateX(-24%); } to { transform: translateX(0); } }
   @keyframes pushOutL { from { transform: translateX(0); } to { transform: translateX(-24%); } }
   body { margin: 0; min-height: 100vh; background: #0a0a0b; background-image: radial-gradient(72% 52% at 50% 44%, #17181a 0%, #121314 42%, #0a0a0b 100%); background-attachment: fixed; display: flex; align-items: center; justify-content: center; font-family: 'Pryvat Sans UI', sans-serif; font-synthesis: none; }
@@ -70,10 +72,10 @@
   @keyframes badgeFadeB { from { opacity: 0; } to { opacity: 1; } }
   @keyframes ringSweep { from { --sweep: 0deg; } to { --sweep: 360deg; } }
   @keyframes ringSweepB { from { --sweep: 0deg; } to { --sweep: 360deg; } }
-  @keyframes centreInB { from { opacity: 0; scale: 0.9; } to { opacity: 1; scale: 1; } }
+  @keyframes centreInB { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
   [data-dragging="1"] [data-avg] { opacity: 0; }
   button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-  @keyframes centreIn { from { opacity: 0; scale: 0.9; } to { opacity: 1; scale: 1; } }
+  @keyframes centreIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
 </style>
 </helmet>
 
@@ -140,7 +142,7 @@
           <div style="position: relative; height: 62px; width: 380px; flex-shrink: 0;">
             <div data-badge="main" style="position: absolute; left: {{ badgeLeft }}; transform: {{ badgeShift }}; top: 4px; transition: {{ badgeMove }};">
               <div style="display: flex; flex-direction: column; align-items: flex-start; padding: {{ badgePadding }}; border-radius: 8px; background: {{ badgeBg }}; box-shadow: {{ badgeShadow }}; letter-spacing: 0px; transition: background 260ms ease, box-shadow 260ms ease, padding 380ms cubic-bezier(0.2, 0.7, 0.2, 1);">
-                <p style="margin: 0 0 -4px; display: flex; font-size: 28px; line-height: 36px; font-weight: 600; color: var(--text); white-space: nowrap;"><sc-for list="{{ amountChars }}" as="ch" hint-placeholder-count="6"><span style="display: inline-block; white-space: pre; animation: {{ ch.anim }};">{{ ch.c }}</span></sc-for></p>
+                <p style="position: relative; z-index: 1; margin: 0 0 -4px; display: flex; font-size: 28px; line-height: 36px; font-weight: 600; color: var(--text); white-space: nowrap;"><sc-for list="{{ amountChars }}" as="ch" hint-placeholder-count="6"><span style="display: inline-block; white-space: pre; animation: {{ ch.anim }};">{{ ch.c }}</span></sc-for></p>
                 <p style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 400; color: var(--text3); white-space: nowrap; animation: {{ periodFade }};">{{ period }}</p>
               </div>
             </div>
@@ -200,33 +202,47 @@
           </sc-if>
 
           <sc-if value="{{ isRadial }}" hint-placeholder-val="{{ false }}">
-            <div onPointerDown="{{ pagerDown }}" onPointerMove="{{ pagerMove }}" onPointerUp="{{ pagerUp }}" onPointerCancel="{{ pagerUp }}" style="position: relative; width: 380px; height: 334px; flex-shrink: 0; overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none;">
+            <div onPointerDown="{{ pagerDown }}" onPointerMove="{{ pagerMove }}" onPointerUp="{{ pagerUp }}" onPointerCancel="{{ pagerUp }}" style="position: relative; width: 380px; height: 420px; margin: -43px 0; flex-shrink: 0; overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none;">
               <svg width="0" height="0" style="position: absolute; pointer-events: none;">
                 <defs>
                   <filter id="segGlow" x="-30%" y="-30%" width="160%" height="160%">
                     <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="{{ glowColor }}" flood-opacity="0.55"></feDropShadow>
                   </filter>
+                  <filter id="segBloom" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur stdDeviation="9"></feGaussianBlur>
+                  </filter>
                 </defs>
               </svg>
               <div ref="{{ trackRef }}" style="position: absolute; inset: 0; will-change: transform;">
                 <sc-for list="{{ radialPages }}" as="rp" hint-placeholder-count="1">
-                  <div style="position: absolute; top: 0; bottom: 0; left: {{ rp.offset }}; width: 380px; padding-top: 8px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
-                    <div onPointerDown="{{ rp.scrubDown }}" onPointerMove="{{ rp.scrubMove }}" onPointerUp="{{ rp.scrubUp }}" onPointerCancel="{{ rp.scrubUp }}" style="width: 288px; height: 288px; padding: 16px; box-sizing: content-box; touch-action: pan-y; animation: {{ rp.sweep }}; -webkit-mask-image: {{ rp.mask }}; mask-image: {{ rp.mask }};">
+                  <div style="position: absolute; top: 0; bottom: 0; left: {{ rp.offset }}; width: 380px; opacity: {{ rp.op }}; padding-top: 8px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
+                    <div onPointerDown="{{ rp.scrubDown }}" onPointerMove="{{ rp.scrubMove }}" onPointerUp="{{ rp.scrubUp }}" onPointerCancel="{{ rp.scrubUp }}" style="width: 288px; height: 288px; pointer-events: {{ rp.ringPE }}; padding: 16px; box-sizing: content-box; touch-action: pan-y; animation: {{ rp.sweep }}; -webkit-mask-image: {{ rp.mask }}; mask-image: {{ rp.mask }};">
                       <svg width="288" height="288" viewBox="0 0 288 288" fill="none" style="display: block; overflow: visible;">
+                        <sc-for list="{{ rp.glows }}" as="gw" hint-placeholder-count="0">
+                          <clipPath id="{{ gw.clipId }}" clipPathUnits="userSpaceOnUse"><path d="{{ gw.clip }}"></path></clipPath>
+                          <path data-glow="1" d="{{ gw.d }}" fill="{{ gw.color }}" stroke="{{ gw.color }}" stroke-width="8" stroke-linejoin="round" filter="url(#segBloom)" clip-path="{{ gw.clipRef }}" style="pointer-events: none; opacity: {{ gw.op }};"></path>
+                        </sc-for>
                         <sc-for list="{{ rp.segs }}" as="seg" hint-placeholder-count="10">
-                          <path d="{{ seg.d }}" fill="{{ seg.fill }}" filter="{{ seg.glow }}" data-seg="1" onClick="{{ seg.select }}" style="cursor: pointer; transition: fill 320ms cubic-bezier(0.32, 0.72, 0, 1);"></path>
+                          <path d="{{ seg.d }}" fill="{{ seg.fill }}" stroke="{{ seg.fill }}" stroke-width="{{ seg.sw }}" stroke-linejoin="round" stroke-linecap="round" filter="{{ seg.glow }}" data-seg="1" onClick="{{ seg.select }}" style="pointer-events: auto; cursor: pointer; transition: fill 320ms cubic-bezier(0.32, 0.72, 0, 1), stroke 320ms cubic-bezier(0.32, 0.72, 0, 1);"></path>
                         </sc-for>
                       </svg>
                     </div>
-                    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, {{ rp.centreY }}); transition: transform 480ms cubic-bezier(0.2, 0.7, 0.2, 1); display: flex; flex-direction: column; align-items: center; padding: 2px 16px 4px; letter-spacing: 0px; animation: {{ rp.centreAnim }};">
+                    <sc-for list="{{ glowLayers }}" as="gl" hint-placeholder-count="0">
+                      <div aria-hidden="true" style="position: absolute; left: 50%; top: calc(50% - 12px); width: 220px; height: 220px; transform: translate(-50%, -50%); pointer-events: none; opacity: 0.32;">
+                        <div style="position: absolute; inset: 0; border-radius: 100px; background: radial-gradient(closest-side, {{ gl.color }} 0%, rgba(0,0,0,0) 72%); filter: blur(34px); mix-blend-mode: screen; animation: {{ gl.anim }};"></div>
+                      </div>
+                    </sc-for>
+                    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, {{ rp.centreY }}); transition: transform 480ms cubic-bezier(0.2, 0.7, 0.2, 1); display: flex; flex-direction: column; align-items: center; padding: 2px 16px 4px; letter-spacing: 0px;">
+                      <div style="display: flex; flex-direction: column; align-items: center; transform-origin: 50% 50%; animation: {{ rp.centreAnim }};">
                       <sc-if value="{{ rp.showSel }}" hint-placeholder-val="{{ false }}">
                         <div role="img" style="position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 14px; width: 48px; height: 48px; border-radius: 100px; background-image: {{ segIconBg }}; background-size: cover; background-repeat: no-repeat; animation-name: {{ iconAnim }}; animation-duration: 460ms; animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1); animation-fill-mode: backwards;"></div>
                       </sc-if>
-                      <p style="margin: 0 0 -4px; display: flex; font-size: 28px; line-height: 36px; font-weight: 600; color: var(--text); text-align: center; white-space: nowrap;"><sc-for list="{{ rp.amountChars }}" as="ch" hint-placeholder-count="6"><span style="display: inline-block; white-space: pre; animation: {{ ch.anim }};">{{ ch.c }}</span></sc-for></p>
-                      <p style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 400; color: var(--text3); text-align: center; white-space: nowrap; animation: {{ rp.periodFade }};">{{ rp.period }}</p>
+                      <p style="position: relative; z-index: 1; margin: 0 0 -4px; display: flex; font-size: 28px; line-height: 36px; font-weight: 600; color: var(--text); text-align: center; white-space: nowrap;"><sc-for list="{{ rp.amountChars }}" as="ch" hint-placeholder-count="6"><span style="display: inline-block; white-space: pre; animation: {{ ch.anim }};">{{ ch.c }}</span></sc-for></p>
+                      <p style="position: relative; z-index: 1; margin: 0; font-size: 16px; line-height: 24px; font-weight: 400; color: var(--text3); text-align: center; white-space: nowrap; animation: {{ rp.periodFade }};">{{ rp.period }}</p>
                       <sc-if value="{{ rp.showSel }}" hint-placeholder-val="{{ false }}">
                         <p style="position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin: 10px 0 0; font-size: 22px; line-height: 30px; font-weight: 600; color: var(--text); text-align: center; white-space: nowrap; animation-name: {{ pctAnim }}; animation-duration: 460ms; animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1); animation-fill-mode: backwards">{{ segPct }}</p>
                       </sc-if>
+                      </div>
                     </div>
                   </div>
                 </sc-for>
@@ -471,7 +487,7 @@
   </sc-if>
 
   <sc-if value="{{ catOpen }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Категорія" style="position: absolute; inset: 0; z-index: 85; display: flex; flex-direction: column; gap: 2px; padding-top: 103px; box-sizing: border-box; background: var(--bg); animation: {{ catAnim }};">
+    <div data-screen-label="Категорія" onClick="{{ catBackgroundClick }}" style="position: absolute; inset: 0; z-index: 85; display: flex; flex-direction: column; gap: 2px; padding-top: 103px; box-sizing: border-box; background: var(--bg); animation: {{ catAnim }};">
       <div onScroll="{{ onScroll }}" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; padding: 8px 16px 50px; box-sizing: border-box; scrollbar-width: none;">
 
         <div style="position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 0; width: 380px; flex-shrink: 0;">
@@ -479,7 +495,7 @@
             <div style="position: relative; height: 62px; width: 380px; flex-shrink: 0;">
               <div data-badge="cat" style="position: absolute; left: {{ catBadgeLeft }}; transform: {{ catBadgeShift }}; top: 4px; transition: {{ catBadgeMove }};">
                 <div style="display: flex; flex-direction: column; align-items: flex-start; padding: {{ catBadgePadding }}; border-radius: 8px; background: {{ catBadgeBg }}; box-shadow: {{ catBadgeShadow }}; letter-spacing: 0px; transition: background 260ms ease, box-shadow 260ms ease, padding 380ms cubic-bezier(0.2, 0.7, 0.2, 1);">
-                  <p style="margin: 0 0 -4px; display: flex; font-size: 28px; line-height: 36px; font-weight: 600; color: var(--text); white-space: nowrap;"><sc-for list="{{ catAmountChars }}" as="ch" hint-placeholder-count="6"><span style="display: inline-block; white-space: pre; animation: {{ ch.anim }};">{{ ch.c }}</span></sc-for></p>
+                  <p style="position: relative; z-index: 1; margin: 0 0 -4px; display: flex; font-size: 28px; line-height: 36px; font-weight: 600; color: var(--text); white-space: nowrap;"><sc-for list="{{ catAmountChars }}" as="ch" hint-placeholder-count="6"><span style="display: inline-block; white-space: pre; animation: {{ ch.anim }};">{{ ch.c }}</span></sc-for></p>
                   <p style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 400; color: var(--text3); white-space: nowrap; animation: {{ catPeriodFade }};">{{ catPeriod }}</p>
                 </div>
               </div>
@@ -579,21 +595,20 @@
           <sc-for list="{{ catGroups }}" as="group" hint-placeholder-count="4">
             <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start; width: 100%; flex-shrink: 0;">
               <p style="margin: 0; width: 100%; font-size: 14px; line-height: 22px; font-weight: 600; letter-spacing: 0px; color: var(--text3);">{{ group.date }}</p>
-              <div style="display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 0 16px; box-sizing: border-box; border-radius: 12px; background: var(--surface);">
+              <div style="display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 4px 0; box-sizing: border-box; border-radius: 12px; background: var(--surface);">
                 <sc-for list="{{ group.items }}" as="tx" hint-placeholder-count="2">
-                  <div style="display: flex; gap: 16px; align-items: center; width: 100%; padding: 12px 0; box-sizing: border-box; flex-shrink: 0;">
-                    <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 100px; background: {{ tx.logoBg }};">
+                  <div style="position: relative; display: flex; gap: 16px; align-items: center; width: 100%; padding: 8px 16px; box-sizing: border-box; flex-shrink: 0;">
+                    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 100px; background: {{ tx.logoBg }};">
                       <span style="display: block; font-size: 18px; line-height: 18px; font-weight: 600; letter-spacing: 0px; text-align: center; color: #ffffff;">{{ tx.logo }}</span>
                     </div>
-                    <div style="display: flex; flex: 1 0 0; min-width: 1px; flex-direction: column; align-items: flex-start;">
-                      <p style="margin: 0; width: 100%; font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: 0px; color: var(--text);">{{ tx.name }}</p>
-                      <p style="margin: 0; width: 100%; font-size: 12px; line-height: 16px; font-weight: 400; color: var(--text3);">{{ tx.time }}</p>
+                    <div style="display: flex; flex: 1 0 0; min-width: 1px; gap: 16px; align-items: center;">
+                      <div style="display: flex; flex: 1 0 0; min-width: 1px; flex-direction: column; align-items: flex-start;">
+                        <p style="margin: 0; height: 24px; font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: 0px; color: var(--text); white-space: nowrap;">{{ tx.name }}</p>
+                        <p style="margin: 0; font-size: 14px; line-height: 22px; font-weight: 400; color: var(--text2); white-space: nowrap;">{{ tx.time }}</p>
+                      </div>
+                      <p style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; color: var(--text); text-align: right; white-space: nowrap;">{{ tx.amount }}</p>
                     </div>
-                    <p style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; color: var(--text); text-align: right; white-space: nowrap;">{{ tx.amount }}</p>
                   </div>
-                  <sc-if value="{{ tx.divider }}" hint-placeholder-val="{{ false }}">
-                    <div style="width: 100%; height: 1px; background: var(--div4);"></div>
-                  </sc-if>
                 </sc-for>
               </div>
             </div>
@@ -781,6 +796,16 @@ class Component extends DCLogic {
   // Two-step list swap: fade the current block out, then mount the next one.
   startSwap(next) {
     if (next === this.state.segment) return;
+    const prev = this.state.segment;
+    this._glowSeq = (this._glowSeq || 0) + 1;
+    if (prev !== null && next !== null) {
+      const pc = this.radialCat(prev, this.state.activePeriod, this.state.page, this.state.custom);
+      this._glowPrev = { id: this._glowSeq, color: pc ? pc.color : "transparent" };
+      clearTimeout(this._glowT);
+      this._glowT = setTimeout(() => { this._glowPrev = null; this.forceUpdate(); }, 440);
+    } else {
+      this._glowPrev = null;
+    }
     // segment → segment keeps the transactions list mounted: swap content instantly,
     // only animate when the list TYPE changes (categories ↔ transactions)
     if (next !== null && this.state.segment !== null) {
@@ -799,7 +824,7 @@ class Component extends DCLogic {
     }, 200);
   }
 
-  componentWillUnmount() { clearTimeout(this._swapT); clearTimeout(this._chipT); }
+  componentWillUnmount() { clearTimeout(this._swapT); clearTimeout(this._chipT); clearTimeout(this._glowT); }
 
   // Overflow is measured from the element, not inferred from scroll events —
   // a label that fits never fires a scroll, so it must report chipMax 0.
@@ -832,7 +857,7 @@ class Component extends DCLogic {
     { key: "customPeriod", label: "Custom Period", note: "Кнопка календаря та власний діапазон" },
   ];
   static FEATURE_STORE = "privat.analytics.features";
-  static SHOW_AVERAGE = false;
+  static SHOW_AVERAGE = true;
 
   static COLSTYLES = [
     { key: "solid", label: "Оранжевий / зелений", note: "Однотонні стовпці: витрати — оранжеві, надходження — зелені" },
@@ -1562,6 +1587,15 @@ class Component extends DCLogic {
     const cat = on ? this.radialCat(sel, tf, page, custom) : null;
     out.segIcon = cat ? cat.icon : "";
     out.segIconBg = cat && cat.icon ? "url('" + cat.icon + "')" : "none";
+    // ambient bloom behind the centre block, tinted by the selected category. Switching
+    // categories keeps both layers mounted for a beat: the old one scales down and fades
+    // out while the new one scales up from 0, so the colour change reads as one move.
+    out.raysColor = cat ? cat.color : "transparent";
+    const layers = [];
+    const glowOn = Component.RADIAL_GLOW_ON;
+    if (glowOn && this._glowPrev) layers.push({ key: "p" + this._glowPrev.id, color: this._glowPrev.color, anim: "glowOut 420ms cubic-bezier(0.32, 0.72, 0, 1) both" });
+    if (glowOn && cat) layers.push({ key: "c" + (this._glowSeq || 0), color: cat.color, anim: "glowIn 520ms cubic-bezier(0.32, 0.72, 0, 1) both" });
+    out.glowLayers = layers;
     const incShares = [0.95, 0.05];
     const payCount = custom ? Math.max(1, Math.round(this.rangeDays(custom).length / 10)) : [1, 3, 3, 36][tf];
     out.incomeRows = !income ? [] : Component.INCOME_POOL.map((p, i) => {
@@ -1840,7 +1874,7 @@ class Component extends DCLogic {
       { n: "Хімчистка", l: "ХІМ", b: "#1C91C7", lo: 200, hi: 1400 },
       { n: "Ремонт взуття", l: "РВ", b: "#8637B9", lo: 150, hi: 900 },
       { n: "Клінінг", l: "КЛН", b: "#0ea5a4", lo: 500, hi: 2600 } ] },
-    { name: "Інше", color: "#34c7a0", icon: "icons/other", w: 3, f: 4, m: [
+    { name: "Інше", color: "#34c7a0", icon: "icons/other", w: 3, f: 4, dull: 1, m: [
       { n: "Інші витрати", l: "ІНШ", b: "#34c7a0", lo: 100, hi: 2600 },
       { n: "Оплата онлайн", l: "ОНЛ", b: "#64748b", lo: 150, hi: 3200 } ] },
     { name: "Тварини", color: "#AE764C", icon: "icons/pets", w: 2, f: 2, m: [
@@ -1935,13 +1969,11 @@ class Component extends DCLogic {
       const swing = 0.55 + this.noise(seed * 1.31 + i * 3.13) * 1.15; // luck of the month
       return { i: i, k: Math.pow(u, 1 / (c.w * swing)) };
     }).sort((a, b) => b.k - a.k);
-    const out = ranked.slice(0, N).map((x) => x.i);
-    // the biggest wedge carries the ring's colour: never let a grey utility
-    // category (transfers, cash, "Інше") lead — push it a few slots down
-    if (Component.POOL[out[0]] && Component.POOL[out[0]].dull) {
-      const j = out.findIndex((pi, k) => k > 0 && !Component.POOL[pi].dull);
-      if (j > 0) { const t = out[0]; out[0] = out[j]; out[j] = t; }
-    }
+    // grey utility categories (cash, transfers, "Інше") stay out of the ring: recolouring
+    // only the wedge would break segment colour = category colour, so the slot goes to the
+    // next-ranked coloured category instead.
+    const coloured = ranked.filter((x) => !Component.POOL[x.i].dull);
+    const out = (coloured.length >= N ? coloured : ranked).slice(0, N).map((x) => x.i);
     this._catSets[key] = out;
     return out;
   }
@@ -2039,11 +2071,56 @@ class Component extends DCLogic {
   // Inset the wedge by a constant arc-length at each radius (not a constant angle),
   // so the gap between neighbours is a straight 1px band of even width across the
   // whole ring instead of a cone that widens toward the outer edge.
+  // ── Gradient palette ────────────────────────────────────────────────
+  // Category order is ranked by spend, which makes a literal gradient jump
+  // warm → cool → warm. For the gradient style the same colours are re-sorted
+  // into one continuous hue run (pinks and reds at the bottom, through orange,
+  // yellow, green, teal and blue, to violet at the top), near-duplicate hues are
+  // dropped, and `n` are taken at even intervals so the run always spans the
+  // whole warm-to-cool range however many stops the bar can carry.
+  // The one grey category colour reads as a dead spot in a decorative gradient, so the
+  // gradient style (bars and ring) substitutes a muted sea-green that sits naturally
+  // between the greens and the teals. The category itself keeps its grey everywhere else.
+  static GRAD_SWAP = { "#61675f": "#3FA08C" };
+  static gradColor(c) { return Component.GRAD_SWAP[String(c).toLowerCase()] || c; }
+
+  static hue(hex) {
+    const h = String(hex).replace("#", "");
+    const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    const R = parseInt(v.slice(0, 2), 16) / 255, G = parseInt(v.slice(2, 4), 16) / 255, B = parseInt(v.slice(4, 6), 16) / 255;
+    const mx = Math.max(R, G, B), mn = Math.min(R, G, B), d = mx - mn;
+    if (!d) return 0;
+    let a = mx === R ? ((G - B) / d) % 6 : mx === G ? (B - R) / d + 2 : (R - G) / d + 4;
+    a *= 60;
+    return (a + 360) % 360;
+  }
+
+  static hueRun(colors, n) {
+    const keyed = colors.map((c) => Component.gradColor(c)).map((c) => ({ c: c, k: (Component.hue(c) + 30) % 360 })).sort((a, b) => a.k - b.k);
+    const uniq = [];
+    keyed.forEach((x) => { if (!uniq.some((u) => Math.abs(u.k - x.k) < 10)) uniq.push(x); });
+    const list = (uniq.length >= 2 ? uniq : keyed).map((x) => x.c);
+    if (list.length <= n) return list;
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(list[Math.round((i * (list.length - 1)) / (n - 1))]);
+    return out;
+  }
+
+  // Gradient column style also rounds the ring's corners by 2px: the wedge is drawn
+  // 2px smaller on every side and stroked back out with a round join, so the ring's
+  // radii and the 1px gaps stay exactly where they were in the other styles.
+  segRound() { return this.state.colStyle === "gradient" ? 3 : 0; }
+
   donutPath(a0, a1, inset, grow) {
-    const R = 144 + (grow || 0), r = 122, C = 144;
+    const ro = this.segRound();
+    const R = 144 + (grow || 0) - ro, r = 122 + ro, C = 144;
     const f = (n) => Math.round(n * 100) / 100;
     const pt = (a, rad) => [f(C + rad * Math.sin(a)), f(C - rad * Math.cos(a))];
-    const dO = (inset || 0) / R, dI = (inset || 0) / r;
+    let dO = ((inset || 0) + ro) / R, dI = ((inset || 0) + ro) / r;
+    // a wedge narrower than the inset would fold inside out — collapse it instead
+    const half = (a1 - a0) / 2;
+    if (dO > half) dO = half;
+    if (dI > half) dI = half;
     const big = a1 - a0 > Math.PI ? 1 : 0;
     const o0 = pt(a0 + dO, R), o1 = pt(a1 - dO, R), i1 = pt(a1 - dI, r), i0 = pt(a0 + dI, r);
     return "M " + o0[0] + " " + o0[1] + " A " + R + " " + R + " 0 " + big + " 1 " + o1[0] + " " + o1[1] +
@@ -2056,6 +2133,33 @@ class Component extends DCLogic {
   // sits inside 16px of padding and draws with overflow visible, so this is purely
   // visual — the chart's box never changes size.
   static RADIAL_SEL_GROW = 6;
+  // peak opacity of the outward bloom, reached exactly when the wedge is fully out
+  static RADIAL_GLOW_OP = 0.8;
+  // master switch for the selected-category light treatment (outward segment bloom +
+  // centre bloom). Flip to true to bring the whole implementation back.
+  static RADIAL_GLOW_ON = false;
+
+  // the selected wedge's angular corridor, from the ring's outer edge outward — the
+  // outward bloom is clipped to this, so it never leaks sideways onto its neighbours
+  outwardClip(shares, i) {
+    if (i === null || i === undefined || !shares[i]) return "";
+    let a0 = 0;
+    for (let k = 0; k < i; k++) a0 += shares[k] * Math.PI * 2;
+    const a1 = a0 + shares[i] * Math.PI * 2;
+    const C = 144, r = 141, R = 192;
+    const f = (n) => Math.round(n * 100) / 100;
+    const pt = (a, rad) => [f(C + rad * Math.sin(a)), f(C - rad * Math.cos(a))];
+    // the wedge itself is drawn inset by half the gap plus its corner rounding, so the
+    // corridor takes the same inset (a hair more) — the blur is cut exactly at its sides
+    const inset = Component.RADIAL_GAP_PX / 2 + this.segRound();
+    const half = (a1 - a0) / 2;
+    const dI = Math.min(inset / r, half), dO = Math.min(inset / R, half);
+    const big = a1 - a0 > Math.PI ? 1 : 0;
+    const [x0, y0] = pt(a0 + dI, r), [x1, y1] = pt(a1 - dI, r);
+    const [X1, Y1] = pt(a1 - dO, R), [X0, Y0] = pt(a0 + dO, R);
+    return "M" + x0 + " " + y0 + "A" + r + " " + r + " 0 " + big + " 1 " + x1 + " " + y1 +
+      "L" + X1 + " " + Y1 + "A" + R + " " + R + " 0 " + big + " 0 " + X0 + " " + Y0 + "Z";
+  }
 
   segPath(shares, i, grow) {
     let a = 0;
@@ -2079,6 +2183,7 @@ class Component extends DCLogic {
     const host = Array.prototype.find.call(tr.children, (c) => c.style.left === "0px") || tr.firstElementChild;
     if (!host) return;
     const els = host.querySelectorAll('[data-seg="1"]');
+    const gls = host.querySelectorAll('[data-glow="1"]');
     const shares = this._segShares;
     if (!els.length || els.length !== shares.length) return;
     const G = Component.RADIAL_SEL_GROW, RATE = G / 200; // px per ms → ~200ms travel
@@ -2101,6 +2206,10 @@ class Component extends DCLogic {
         g = Math.min(G, Math.max(0, g));
         this._segG[i] = g;
         if (els[i]) els[i].setAttribute("d", this.segPath(shares, i, g));
+        if (gls[i]) {
+          gls[i].setAttribute("d", this.segPath(shares, i, g + 4));
+          gls[i].style.opacity = (g / G) * Component.RADIAL_GLOW_OP;
+        }
         if (g !== target) moving = true;
       }
       if (moving) { this._segTick = requestAnimationFrame(step); } else { this._segTick = 0; }
@@ -2160,28 +2269,55 @@ class Component extends DCLogic {
     const paths = this.radialGeometry(shares, on ? sel : null);
     if (isCur) this._segShares = shares;
     const set = o.income ? [] : this.catSet(o.tf, o.page, o.custom);
-    const segColor = (i) => (Component.POOL[set[i % set.length]] || Component.POOL[0]).color;
+    const segColor = (i) => {
+      const c = (Component.POOL[set[i % set.length]] || Component.POOL[0]).color;
+      return this.state.colStyle === "gradient" ? Component.gradColor(c) : c;
+    };
     return {
       key: "r" + o.tf + "-" + o.page + (o.income ? "i" : "e"),
       offset: (o.curPage - o.page) * Component.PAGE + "px",
+      // the page pitch is narrower than the frame, so a neighbouring ring would otherwise
+      // graze the edge: neighbours only exist while a drag is actually moving the track
+      op: isCur || this.state.dragging ? 1 : 0,
+      // nothing selected: the ring box lets touches through so a swipe started over the
+      // centre still drags the carousel — only the wedges themselves stay tappable
+      ringPE: on ? "auto" : "none",
       isIncomeRing: o.income,
       // alternating names so a timeframe switch restarts the draw, the way the bars do
       sweep: o.noGrow ? "none" : ["ringSweep", "ringSweepB"][(this._tfTick || 0) % 2] + " 330ms linear both",
       mask: o.noGrow ? "none" : "conic-gradient(from 0deg at 50% 50%, #000 0 var(--sweep), transparent var(--sweep) 360deg)",
-      centreAnim: o.noGrow ? "none" : ["centreIn", "centreInB"][(this._tfTick || 0) % 2] + " 240ms cubic-bezier(0.32, 0.72, 0, 1) 127ms both",
+      // the scale + fade entrance belongs to the chart-type change only: a timeframe
+      // switch inside the ring leaves the block still and lets the digits cascade alone
+      centreAnim: o.noGrow || !this._centreEntrance ? "none" : ["centreIn", "centreInB"][(this._chartTick || 0) % 2] + " 240ms cubic-bezier(0.32, 0.72, 0, 1) 127ms both",
       showSel: isCur && on,
+      // a slightly larger copy of the selected wedge, blurred and masked to the ring's
+      // outside so the bloom only ever projects outward
+      // one bloom per segment: the grow ticker fades and extends each one from its own
+      // segment's outward travel, so glow and expansion are the same movement
+      glows: o.income || !isCur || !Component.RADIAL_GLOW_ON ? [] : shares.map((sh, i) => ({
+        key: "g" + o.page + "-" + i,
+        clipId: "og" + o.page + "-" + i,
+        clipRef: "url(#og" + o.page + "-" + i + ")",
+        clip: this.outwardClip(shares, i),
+        d: this.segPath(shares, i, (on && sel === i ? Component.RADIAL_SEL_GROW : 0) + 4),
+        color: segColor(i),
+        op: on && sel === i ? Component.RADIAL_GLOW_OP : 0,
+      })),
       // selected state adds an icon above and a percentage below — the value + period
       // block travels down while the digit cascade plays (matched curve and span), so
       // the two read as one movement rather than a jump between two positions
       centreY: isCur && on ? "calc(-50% + 12px)" : "-50%",
       amount: this.fmt(on ? total * shares[sel] : total),
-      amountChars: this.amountChars(this.fmt(on ? total * shares[sel] : total), isCur && !!o.countUp, this._radialTick),
+      // the centre amount runs the bar chart's own digit cascade — on every period
+      // change and on the entrance, so arriving from the bar chart reads the same way
+      amountChars: this.amountChars(this.fmt(on ? total * shares[sel] : total), isCur && (!!o.countUp || !o.noGrow), (this._radialTick || 0) + (this._tfTick || 0)),
       periodFade: isCur && o.countUp ? ["labelFadeA", "labelFadeB"][(this._radialTick || 0) % 2] + " 320ms ease both" : "none",
       period: spec.range,
       segs: paths.map((d, i) => ({
         key: i,
         d: d,
         fill: o.income ? (i === 0 ? "var(--income)" : "var(--seg-off)") : on ? (sel === i ? segColor(i) : "var(--seg-off)") : segColor(i),
+        sw: this.segRound() * 2,
         glow: "none",
         select: (e) => {
           if (e && e.stopPropagation) e.stopPropagation();
@@ -2332,12 +2468,22 @@ class Component extends DCLogic {
     const nCats = () => (o.income ? 2 : this.catMix(o.tf, o.page, o.custom, 0).length);
     const fillFor = (i, px) => {
       if (cstyle === "solid" || !px) return o.color;
+      if (cstyle === "gradient" && o.detail) {
+        // Inside a category detail the chart shows one category's dynamics, so the
+        // multi-category gradient carries no meaning: bars take the semantic fill
+        // (orange for expenses, green for income) and keep the gradient geometry.
+        return o.color;
+      }
       if (cstyle === "gradient") {
-        const r = px / PLOT;
-        const mix = mixFor(i, r > 0.75 ? 6 : r > 0.5 ? 5 : r > 0.25 ? 4 : 3);
-        let acc = 0;
-        const stops = mix.map((m) => { acc += m.s; return m.c + " " + Math.round(acc * 100) + "%"; });
-        return "linear-gradient(to top, " + mix[0].c + " 0%, " + stops.join(", ") + ")";
+        // Decorative, not proportional: the bar's categories are re-ordered into a warm →
+        // cool hue run and spread at even intervals, so no colour is ever squeezed into a
+        // sliver. Shorter bars simply carry fewer stops.
+        const r = Math.max(0, Math.min(1, px / PLOT));
+        const n = r > 0.7 ? 6 : r > 0.5 ? 5 : r > 0.3 ? 4 : 3;
+        const cols = Component.hueRun(mixFor(i, 14).map((m) => m.c), n);
+        if (cols.length < 2) return cols[0] || o.color;
+        const stops = cols.map((c, k) => c + " " + Math.round((k / (cols.length - 1)) * 100) + "%");
+        return "linear-gradient(to top, " + stops.join(", ") + ")";
       }
       // sections: every category of the period, largest at the bottom, hard stops.
       // Nothing is dropped — a sub-1% category still gets a MIN-px strip near the top —
@@ -2384,7 +2530,7 @@ class Component extends DCLogic {
         op: !isCur && (inView(i) || (o.curKeys && spec.keys && o.curKeys[spec.keys[i]])) ? 0 : 1,
         w: spec.width + "px",
         fill: fillFor(i, empty(v) ? 0 : h(v)),
-        radius: cstyle === "solid" ? "999px" : "0px",
+        radius: cstyle === "solid" ? "999px" : cstyle === "gradient" ? "4px 4px 0px 0px" : "0px",
         h: (empty(v) ? 0 : h(v)) + "px",
         scale: fade || empty(v) || sel === null || sel === i ? 1 : 0,
         fillOp: fade && !(sel === null || sel === i) ? 0.34 : 1,
@@ -2419,6 +2565,7 @@ class Component extends DCLogic {
     // a dedicated counter: animTick also fires on every selection, which would
     // restart the whole ring sweep mid-scrub
     this._tfTick = (this._tfTick || 0) + 1;
+    this._centreEntrance = false;
     return this.bump({ activePeriod: tf, selectedBar: null, page: 0, gridReturned: {} });
   }
 
@@ -2684,6 +2831,13 @@ class Component extends DCLogic {
     });
   }
 
+  // same toggle the main chart uses: tapping the selected bar clears the selection
+  // and the screen falls back to its default (unselected) state
+  catSelect(i) {
+    const cur = this.state.cat ? this.state.cat.selectedBar : null;
+    this.catPatch({ selectedBar: cur === i ? null : i });
+  }
+
   catPatch(patch) {
     this.setState((s) => ({ animTick: s.animTick + 1, cat: Object.assign({}, s.cat, { noGrow: false }, patch) }));
   }
@@ -2841,12 +2995,12 @@ class Component extends DCLogic {
         labelWeight: sel === i ? 600 : 400,
         trackBg: sel === null || sel === i ? "transparent" : "color-mix(in srgb, " + color + " 34%, transparent)",
         growAnim: sel === null ? ["growUpA", "growUpB", "growUpC"][(c.period + c.page + i) % 3] : "none",
-        select: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.catPatch({ selectedBar: i }); },
+        select: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.catSelect(i); },
       })),
       catChartPages: this.pageWindow(c.page, c.custom, c.period).map((pg) => this.plotPage({
         tf: c.period, page: pg, curPage: c.page, income: inc, custom: c.custom,
-        mult: mult, seedShift: inc ? 0 : (c.pool + 1) * 211, sel: sel, color: color, small: true, tag: "c" + c.pool, noGrow: c.noGrow, curKeys: catKeys,
-        onSelect: (i) => this.catPatch({ selectedBar: i }),
+        mult: mult, seedShift: inc ? 0 : (c.pool + 1) * 211, sel: sel, color: color, small: true, detail: true, tag: "c" + c.pool, noGrow: c.noGrow, curKeys: catKeys,
+        onSelect: (i) => this.catSelect(i),
       })),
       catPagerDown: this.pager("cat").down,
       catPagerMove: this.pager("cat").move,
@@ -2893,6 +3047,13 @@ class Component extends DCLogic {
       catSelectPeriod2: () => this.catPatch({ period: 2, selectedBar: null, page: 0 }),
       catSelectPeriod3: () => this.catPatch({ period: 3, selectedBar: null, page: 0 }),
       catClearSelection: () => this.catPatch({ selectedBar: null }),
+      // same source of truth as the main screen's backgroundClick: a tap anywhere that
+      // isn't an actionable element (or a bar) clears the selection
+      catBackgroundClick: (e) => {
+        if (this._noClick && Date.now() - this._noClick < 400) return;
+        if (e.target.closest && e.target.closest('button, a, input, [data-bar], [data-seg]')) return;
+        if (this.state.cat && this.state.cat.selectedBar !== null) this.catPatch({ selectedBar: null });
+      },
       catSwipeStart: (e) => { this._cx = e.clientX; this._cy = e.clientY; },
       catSwipeEnd: (e) => {
         if (this._cx == null || c.custom) { this._cx = null; return; }
@@ -3111,8 +3272,12 @@ class Component extends DCLogic {
       selectPeriod1: () => this.enterPeriod(1),
       selectPeriod2: () => this.enterPeriod(2),
       selectPeriod3: () => this.enterPeriod(3),
-      showBars: () => this.bump({ chartType: "bars", selectedBar: null }),
-      showRadial: () => this.bump({ chartType: "radial", selectedBar: null }),
+      showBars: () => { this._centreEntrance = false; return this.bump({ chartType: "bars", selectedBar: null }); },
+      showRadial: () => {
+        this._centreEntrance = true;
+        this._chartTick = (this._chartTick || 0) + 1;
+        return this.bump({ chartType: "radial", selectedBar: null });
+      },
       onBack: () => {},
     };
   }
