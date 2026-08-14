@@ -157,12 +157,12 @@
                 <div style="height: 14px; display: flex; align-items: center;"><div style="width: 100%; height: 0; border-top: 0.5px solid var(--div);"></div></div>
                 <div style="height: 14px; display: flex; align-items: center;"><div style="width: 100%; height: 0; border-top: 0.5px solid var(--div);"></div></div>
               </div>
-              <div style="position: absolute; left: {{ freeClipLeft }}; top: 0; bottom: 0; right: 44px; overflow: hidden; clip-path: inset(0 1.5px);">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; right: 44px; overflow: hidden; clip-path: inset(0 1.5px);">
               <div ref="{{ trackRef }}" style="position: absolute; inset: 0; will-change: transform;">
               <sc-for list="{{ chartPages }}" as="pg" hint-placeholder-count="1">
                 <div data-page="{{ pg.pageId }}" style="position: absolute; top: 0; bottom: 0; left: {{ pg.offset }}; width: 380px; pointer-events: {{ pg.pe }};">
                   <div style="position: absolute; inset: 0; padding: 0 40px 0 16px; box-sizing: border-box;">
-                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: {{ pg.justify }}; padding: 0 43.797px 0 0; box-sizing: border-box;">
+                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 43.797px 0 0; box-sizing: border-box;">
                       <sc-for list="{{ pg.bars }}" as="bar" hint-placeholder-count="6">
                         <div data-bar="1" onClick="{{ bar.select }}" style="position: relative; height: 100%; flex: 0 0 auto; width: {{ bar.colW }}; opacity: {{ bar.op }}; overflow: hidden; cursor: pointer;">
                           <div style="position: absolute; top: 8px; bottom: 23px; left: 0; right: 0;">
@@ -510,12 +510,12 @@
                 <div style="height: 14px; display: flex; align-items: center;"><div style="width: 100%; height: 0; border-top: 0.5px solid var(--div);"></div></div>
                 <div style="height: 14px; display: flex; align-items: center;"><div style="width: 100%; height: 0; border-top: 0.5px solid var(--div);"></div></div>
               </div>
-              <div style="position: absolute; left: {{ catFreeClipLeft }}; top: 0; bottom: 0; right: 44px; overflow: hidden; clip-path: inset(0 1.5px);">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; right: 44px; overflow: hidden; clip-path: inset(0 1.5px);">
               <div ref="{{ catTrackRef }}" style="position: absolute; inset: 0; will-change: transform;">
               <sc-for list="{{ catChartPages }}" as="pg" hint-placeholder-count="1">
                 <div data-page="{{ pg.pageId }}" style="position: absolute; top: 0; bottom: 0; left: {{ pg.offset }}; width: 380px; pointer-events: {{ pg.pe }};">
                   <div style="position: absolute; inset: 0; padding: 0 40px 0 16px; box-sizing: border-box;">
-                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: {{ pg.justify }}; padding: 0 43.797px 0 0; box-sizing: border-box;">
+                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 43.797px 0 0; box-sizing: border-box;">
                       <sc-for list="{{ pg.bars }}" as="bar" hint-placeholder-count="6">
                         <div data-bar="1" onClick="{{ bar.select }}" style="position: relative; height: 100%; flex: 0 0 auto; width: {{ bar.colW }}; opacity: {{ bar.op }}; overflow: hidden; cursor: pointer;">
                           <div style="position: absolute; top: 8px; bottom: 23px; left: 0; right: 0;">
@@ -927,9 +927,29 @@ class Component extends DCLogic {
     return { values: [val], labels: [label], names: [name], keys: ["m" + y + "-" + m], range: name };
   }
 
-  // the aggregate window currently in view — everything the badge/total/period
-  // recalculation reads follows this instead of a calendar page
-  freeVisibleSpec(tf, anchor, income, seedShift) {
+  // the clean "start – end" boundary text for the whole visible window (used only for
+  // the unselected badge) — built from real dates, not by gluing bucket names together
+  freeRangeText(tf, anchor, n) {
+    const N = this.now();
+    if (tf === 0) {
+      const e = new Date(N.y, N.m, N.d - anchor), s = new Date(N.y, N.m, N.d - (anchor + n - 1));
+      return this.rangeLabel({ start: this.isoOf(s.getFullYear(), s.getMonth(), s.getDate()), end: this.isoOf(e.getFullYear(), e.getMonth(), e.getDate()) });
+    }
+    if (tf === 1) {
+      const endDt = new Date(N.y, N.m, N.d - anchor * 7);
+      const startDt = new Date(N.y, N.m, N.d - (anchor + n - 1) * 7 - 6);
+      return this.rangeLabel({ start: this.isoOf(startDt.getFullYear(), startDt.getMonth(), startDt.getDate()), end: this.isoOf(endDt.getFullYear(), endDt.getMonth(), endDt.getDate()) });
+    }
+    const absEnd = N.y * 12 + N.m - anchor, absStart = N.y * 12 + N.m - (anchor + n - 1);
+    const ey = Math.floor(absEnd / 12), em = ((absEnd % 12) + 12) % 12, sy = Math.floor(absStart / 12), sm = ((absStart % 12) + 12) % 12;
+    const showY = ey !== sy || ey !== N.y;
+    return Component.monY(sm, sy, showY) + " – " + Component.monY(em, ey, showY);
+  }
+
+  // a full n-bar window at the exact Fixed Grid bar count/width for this timeframe,
+  // just starting at an arbitrary (non-calendar-aligned) offset. specFor's ordinary
+  // gap/colW math runs on this unchanged, so geometry is identical to Fixed Grid.
+  freeWindowSpec(tf, anchor, income, seedShift) {
     const meta = Component.FREE_META[tf] || Component.FREE_META[0];
     const n = meta.n;
     const values = [], labels = [], names = [], keys = [];
@@ -937,7 +957,7 @@ class Component extends DCLogic {
       const s = this.freeUnitSpec(tf, anchor + (n - 1 - i), income, seedShift);
       values.push(s.values[0]); labels.push(s.labels[0]); names.push(s.names[0]); keys.push(s.keys[0]);
     }
-    return { values: values, labels: labels, names: names, keys: keys, colW: meta.colW, width: meta.width, range: names[0] + " – " + names[n - 1], axisUnit: tf >= 2 ? 1000 : 0 };
+    return { values: values, labels: labels, names: names, keys: keys, width: meta.width, range: this.freeRangeText(tf, anchor, n), axisUnit: tf >= 2 ? 1000 : 0 };
   }
 
   feat(key) { return !!(this.state.features || {})[key]; }
@@ -1407,14 +1427,14 @@ class Component extends DCLogic {
   // simply centres the bars it has instead of padding out empty future slots.
   specFor(tf, page, income, custom, mult, seedShift) {
     let s = custom ? this.customSpec(custom, income) : this.rawSpec(tf, page, income, seedShift);
-    if (this.freeOn() && !custom) {
-      const meta = Component.FREE_META[tf] || Component.FREE_META[0];
-      s = Object.assign({}, s, { colW: meta.colW, width: meta.width });
-    } else {
-      const n = s.values.length || 1;
-      const gap = (Component.PLOT_W - n * s.width) / (n + 1);
-      s = Object.assign({}, s, { colW: s.width + gap });
-    }
+    // however many bars are visible, they spread over the whole plot: one gap between
+    // every pair plus one at each edge, all equal — gap = (plot − bars) / (n + 1),
+    // and each column carries half a gap on either side of its bar. Free Scroll's
+    // per-window spec has the same shape (n values + a fixed width), so this runs
+    // unchanged and produces the exact Fixed Grid geometry for that bar count.
+    const n = s.values.length || 1;
+    const gap = (Component.PLOT_W - n * s.width) / (n + 1);
+    s = Object.assign({}, s, { colW: s.width + gap });
     if (mult && mult !== 1) return Object.assign({}, s, { values: s.values.map((v) => (v === null ? null : Math.max(10, Math.round(v * mult / 10) * 10))) });
     return s;
   }
@@ -1496,7 +1516,7 @@ class Component extends DCLogic {
   }
 
   rawSpec(tf, page, income, seedShift) {
-    if (this.freeOn()) return this.freeUnitSpec(tf, page, income, seedShift);
+    if (this.freeOn()) return this.freeWindowSpec(tf, page, income, seedShift);
     const N = this.now();
     const grid = this.gridOn();
     const seedM = (tf + 1) * 97 + (income ? 13 : 0) + (seedShift || 0);
@@ -2508,20 +2528,14 @@ class Component extends DCLogic {
     const spec = this.specFor(o.tf, o.page, o.income, o.custom, o.mult, o.seedShift);
     const n = spec.values.length;
     const isCur = o.page === o.curPage;
-    // Free Scroll: every rendered bar is its own page (one unit each); which one is
-    // "selected" is a window-relative index (0..winN-1, matching freeVisibleSpec's
-    // order), so convert this bar's absolute unit offset into that index to compare
-    const freeIdx = this.freeOn() ? (o.curPage + (o.winN || 0) - 1 - o.page) : null;
-    const sel = this.freeOn()
-      ? (o.sel !== null && o.sel !== undefined && freeIdx === o.sel && spec.values[0] !== null ? 0 : null)
-      : (isCur && o.sel !== null && o.sel !== undefined && o.sel < n && spec.values[o.sel] !== null ? o.sel : null);
+    const sel = isCur && o.sel !== null && o.sel !== undefined && o.sel < n && spec.values[o.sel] !== null ? o.sel : null;
     const axisMax = o.axisMaxOverride != null ? o.axisMaxOverride : this.niceMax(this.maxOf(spec.values));
     const avg = this.avgOf(spec.values);
     const h = (v) => Math.max(6, Math.round((v / axisMax) * PLOT));
     const lab = (v) => (o.small ? this.axisLabel(v, axisMax) : this.thousands(v));
     // Fixed Grid dims by colour, not by collapsing the fill: heights stay put, so
     // clearing a selection mid-drag is a short fade back rather than a re-grow
-    const fade = this.gridOn() && !o.custom;
+    const fade = (this.gridOn() || this.freeOn()) && !o.custom;
     // zero income draws nothing at all — the slot stays, the bar does not
     const shift = this.pageShift(o.tf, o.curPage, o.custom) - this.pageShift(o.tf, o.page, o.custom) + (o.freeShift || 0);
     // a neighbour page overlaps the current one inside the viewport (a partial period
@@ -2530,7 +2544,7 @@ class Component extends DCLogic {
     // suppressed only at rest: during a drag the neighbour is legitimately sliding
     // into view, so the track must stay continuous
     const inView = (i) => {
-      if (this.state.dragging || this.freeOn()) return false;
+      if (this.state.dragging) return false;
       const a = shift + 16 + i * spec.colW;
       return a + spec.colW > -1 && a < 341;
     };
@@ -2541,17 +2555,22 @@ class Component extends DCLogic {
     // randomness at render time. Solid keeps the single orange / green fill.
     const cstyle = o.custom ? "solid" : (this.state.colStyle || "solid");
     // one bar's category mix comes from catMix — the same ranked distribution the list
-    // below the chart renders — so segment colours and order always match the legend
+    // below the chart renders — so segment colours and order always match the legend.
+    // Free Scroll renders the same calendar bar from several overlapping windows at
+    // once (each window centred on a different anchor); keying by that anchor would
+    // give the same bar a different colour depending on which window drew it, so use
+    // the bar's own absolute offset as its identity instead — stable regardless.
+    const absOf = (i) => o.page + (n - 1 - i);
     const mixFor = (i, cap) => {
       const mix = o.income
         ? [{ color: "#1DA334", share: 0.95 }, { color: "#0f9f4f", share: 0.05 }]
-        : this.catMix(o.tf, o.page, o.custom, i);
+        : this.freeOn() && !o.custom ? this.catMix(o.tf, absOf(i), o.custom, null) : this.catMix(o.tf, o.page, o.custom, i);
       const n = Math.min(cap, mix.length);
       const parts = mix.slice(0, n);
       const sum = parts.reduce((a, b) => a + b.share, 0) || 1;
       return parts.map((p) => ({ c: p.color, s: p.share / sum }));
     };
-    const nCats = () => (o.income ? 2 : this.catMix(o.tf, o.page, o.custom, 0).length);
+    const nCats = () => (o.income ? 2 : (this.freeOn() && !o.custom ? this.catMix(o.tf, absOf(0), o.custom, null) : this.catMix(o.tf, o.page, o.custom, 0)).length);
     const fillFor = (i, px) => {
       if (cstyle === "solid" || !px) return o.color;
       if (cstyle === "gradient" && o.detail) {
@@ -2596,17 +2615,16 @@ class Component extends DCLogic {
     return {
       key: o.tf + "-" + o.page + "-" + (o.income ? "i" : "e") + "-" + (o.tag || ""),
       pageId: String(o.page),
-      justify: "center",
       // only the page in front takes taps: neighbouring pages overlap it inside the
       // viewport, and an invisible neighbour must never swallow a bar tap
-      pe: this.freeOn() ? "auto" : (isCur ? "auto" : "none"),
+      pe: isCur ? "auto" : "none",
       // higher page = earlier period, and it enters from the left on a rightward drag
       // exact fractional offset keeps a neighbour's last column flush with the clip
       // edge; the viewport's clip-path swallows whatever sub-pixel residue remains
       offset: shift + "px",
       axis0: lab(0), axis1: lab(axisMax / 2), axis2: lab(axisMax),
       // average indicator temporarily hidden — flip SHOW_AVERAGE to bring it back
-      showAverage: Component.SHOW_AVERAGE && sel === null && !this.freeOn(),
+      showAverage: Component.SHOW_AVERAGE && sel === null,
       avgBottom: Math.round((avg / axisMax) * PLOT) + "px",
       avgLabel: "Сер. " + lab(avg),
       activeFill: o.color,
@@ -2614,7 +2632,7 @@ class Component extends DCLogic {
         key: o.page + "-" + i,
         label: spec.labels[i],
         colW: spec.colW + "px",
-        op: this.freeOn() ? 1 : (!isCur && (inView(i) || (o.curKeys && spec.keys && o.curKeys[spec.keys[i]])) ? 0 : 1),
+        op: this.freeOn() ? (isCur || this.state.dragging ? 1 : 0) : (!isCur && (inView(i) || (o.curKeys && spec.keys && o.curKeys[spec.keys[i]])) ? 0 : 1),
         w: spec.width + "px",
         fill: fillFor(i, empty(v) ? 0 : h(v)),
         radius: cstyle === "solid" ? "999px" : cstyle === "gradient" ? "4px 4px 0px 0px" : "0px",
@@ -2624,15 +2642,13 @@ class Component extends DCLogic {
         labelColor: sel === i ? "var(--text-hi)" : "var(--text3)",
         labelWeight: sel === i ? 600 : 400,
         trackBg: fade || empty(v) || sel === null || sel === i ? "transparent" : "color-mix(in srgb, " + o.color + " 34%, transparent)",
-        growAnim: (!isCur && !this.freeOn()) || o.noGrow || empty(v) ? "none"
+        growAnim: this.state.dragging || !isCur || o.noGrow || empty(v) ? "none"
           // selecting never re-grows the bar: it keeps its height and only changes colour
           : sel === null ? ["growUpA", "growUpB", "growUpC"][(o.tf + o.page + i) % 3]
           : "none",
         select: (e) => {
           if (e && e.stopPropagation) e.stopPropagation();
-          if (empty(v) || (this._noClick && Date.now() - this._noClick < 320)) return;
-          if (this.freeOn()) { o.onSelect(freeIdx); return; }
-          if (!isCur) return;
+          if (!isCur || empty(v) || (this._noClick && Date.now() - this._noClick < 320)) return;
           o.onSelect(i);
         },
       })),
@@ -2747,7 +2763,7 @@ class Component extends DCLogic {
           const target = Math.min(self.maxPage(tfOf()), Math.max(0, p + Math.round((d.dx + momentum) / pitch)));
           const to = (target - p) * pitch;
           const el = self[trackKey];
-          const finish = () => (kind === "cat" ? self.catPatch({ page: target, selectedBar: null, dragging: false }) : self.bump({ page: target, selectedBar: null, dragging: false }));
+          const finish = () => (kind === "cat" ? self.catPatch({ page: target, selectedBar: null, noGrow: true, dragging: false }) : self.bump({ page: target, selectedBar: null, noGrow: true, dragging: false }));
           if (!el) { connector("1"); average(true); finish(); return; }
           el.style.transition = "transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1)";
           el.style.transform = "translateX(" + Math.round(to) + "px)";
@@ -2795,11 +2811,10 @@ class Component extends DCLogic {
     if (custom) return [curPage];
     const last = this.maxPage(tf || 0);
     if (this.freeOn()) {
-      // one continuous strip: render a wide buffer on both sides so nothing rendered
-      // mid-drag ever has to disappear once the gesture settles
-      const meta = Component.FREE_META[tf || 0] || Component.FREE_META[0];
+      // pages now overlap by n-1 bars and tile at a single bar's pitch, not a whole
+      // window's — a full-screen drag can cross many pages, so the buffer is wide
       const out = [];
-      for (let p = curPage - 12; p <= curPage + meta.n + 40; p++) if (p >= 0 && p <= last) out.push(p);
+      for (let p = curPage - 20; p <= curPage + 20; p++) if (p >= 0 && p <= last) out.push(p);
       return out;
     }
     const ahead = this.gridOn() ? 3 : 1;
@@ -3084,12 +3099,7 @@ class Component extends DCLogic {
     const def = (inc ? Component.INCOME_POOL : Component.POOL)[c.pool] || Component.POOL[0];
     const PLOT = 233;
     const mult = this.catMult(c);
-    const spec = this.freeOn() && !c.custom
-      ? (() => {
-          const fv = this.freeVisibleSpec(c.period, c.page, inc, inc ? 0 : (c.pool + 1) * 211);
-          return mult && mult !== 1 ? Object.assign({}, fv, { values: fv.values.map((v) => (v === null ? null : Math.max(10, Math.round(v * mult / 10) * 10))) }) : fv;
-        })()
-      : this.specFor(c.period, c.page, inc, c.custom, mult, inc ? 0 : (c.pool + 1) * 211);
+    const spec = this.specFor(c.period, c.page, inc, c.custom, mult, inc ? 0 : (c.pool + 1) * 211);
     const n = spec.values.length;
     const sel = c.selectedBar !== null && c.selectedBar !== undefined && c.selectedBar < n && spec.values[c.selectedBar] !== null ? c.selectedBar : null;
     const axisMax = this.niceMax(this.maxOf(spec.values));
@@ -3129,10 +3139,9 @@ class Component extends DCLogic {
       catChartPages: this.pageWindow(c.page, c.custom, c.period).map((pg) => this.plotPage({
         tf: c.period, page: pg, curPage: c.page, income: inc, custom: c.custom,
         mult: mult, seedShift: inc ? 0 : (c.pool + 1) * 211, sel: sel, color: color, small: true, detail: true, tag: "c" + c.pool, noGrow: c.noGrow, curKeys: catKeys, freeShift: c.freeShift || 0,
-        winN: (Component.FREE_META[c.period] || Component.FREE_META[0]).n, axisMaxOverride: this.freeOn() ? axisMax : null,
+        axisMaxOverride: this.freeOn() ? axisMax : null,
         onSelect: (i) => this.catSelect(i),
       })),
-      catFreeClipLeft: (this.freeOn() ? Math.max(0, Component.PLOT_W - (Component.FREE_META[c.period] || Component.FREE_META[0]).n * (Component.FREE_META[c.period] || Component.FREE_META[0]).colW) : 0) + "px",
       catPagerDown: this.pager("cat").down,
       catPagerMove: this.pager("cat").move,
       catPagerUp: this.pager("cat").up,
@@ -3200,7 +3209,7 @@ class Component extends DCLogic {
 
   renderVals() {
     const PLOT = 233; // px between the top of the plot and the label row
-    const spec = this.freeOn() && !this.state.custom ? this.freeVisibleSpec(this.state.activePeriod, this.state.page, this.state.activeTab === 1, 0) : this.spec();
+    const spec = this.spec();
     const sel = this.state.selectedBar;
     const bars = this.state.chartType === "bars";
     const frame = this.props.showDeviceFrame ?? true;
@@ -3269,13 +3278,9 @@ class Component extends DCLogic {
       chartPages: this.pageWindow(this.state.page, this.state.custom, p).map((pg) => this.plotPage({
         tf: p, page: pg, curPage: this.state.page, income: t === 1, custom: this.state.custom,
         mult: 1, seedShift: 0, sel: sel, color: color, tag: "m" + t, noGrow: this.state.noGrow, curKeys: curKeys, freeShift: this.state.freeShift || 0,
-        winN: (Component.FREE_META[p] || Component.FREE_META[0]).n, axisMaxOverride: this.freeOn() ? axisMax : null,
+        axisMaxOverride: this.freeOn() ? axisMax : null,
         onSelect: (i) => this.bump({ selectedBar: i }),
       })),
-      // Free Scroll: crop the same viewport down to exactly the Fixed Grid bar count —
-      // the continuous strip behind it is one bar wider than the frame either way, so
-      // nothing but whole bars is ever visible at rest
-      freeClipLeft: (this.freeOn() ? Math.max(0, Component.PLOT_W - (Component.FREE_META[p] || Component.FREE_META[0]).n * (Component.FREE_META[p] || Component.FREE_META[0]).colW) : 0) + "px",
       radialPages: (() => {
         const ringText = this.radialAmount(p, this.state.page, t === 1, this.state.custom, this.state.segment);
         const countUp = this.radialChanged(t, p, ringText, this.state.noGrow, bars);
