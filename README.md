@@ -1,57 +1,30 @@
-# Аналітика — PrivatBank prototype
+# Analitica NEW — Production Build
 
-The analytics screen: expenses / income, timeframes, bar and radial charts with
-selection, swipe paging, a Free Scroll continuous-timeline chart mode, a Smart
-Scroll sticky toolbar, category details and settings.
+Self-contained static build of the Analytics dashboard (dark theme), exactly matching the working Preview: calendar-aligned Month view, responsive weekly bar spacing, swipe transitions, and gradient category bars.
 
-## Run
+## Contents
 
-```bash
-npm install
-npm run dev        # http://localhost:5173
-npm run build      # → dist/
-npm run preview    # serve the built output
+- `Analytics Screen Dark.dc.html` — main screen (entry point)
+- `StatusBarDark.dc.html` — status bar, loaded by the main screen
+- `support.js` — runtime that renders the above two files (do not remove or rename)
+- `index.html` — redirects to the main screen
+- `assets/` — card, envelope, and payment-network artwork
+- `uploads/` — category icons (`icons/`) and the variable font (`PryvatSansUIVF.ttf`)
+
+## Running it
+
+This build is plain static files — any static file server works:
+
+```
+npx serve .
+# or
+python3 -m http.server 8080
 ```
 
-The folder also opens as-is from any plain static server (`npx serve .`) — every
-asset exists both at the app root and under `public/`.
+Then open `http://localhost:<port>/`. Opening the HTML file directly via `file://` may block the internal fetch that loads `StatusBarDark.dc.html`, depending on your browser — serving over HTTP avoids that.
 
-## Deploy (Vercel)
+## Notes
 
-Framework preset **Vite** — build command `npm run build`, output directory `dist`.
-
-## Default state (baked in)
-
-This build's defaults match the last state shown in the design preview:
-Витрати tab, Місяць timeframe, bar chart, Календарна сітка chart view, Градієнт по
-списку column style, and **Розумний скрол ON**. Users can change any of this from
-Settings; nothing here is hardcoded past the initial state.
-
-## Layout
-
-- `index.html` — the whole screen: markup, inline styles, component logic in the
-  `<script type="text/x-dc" data-dc-script>` block.
-- `support.js` — the runtime that compiles/mounts that template, loaded via a
-  `document.write` loader (a plain `<script src>` gets rewritten into a hashed ES
-  module by Vite's HTML pipeline, deferring it past template parsing). Duplicated at
-  root + `public/` so the folder works from a plain static server too; same for
-  `StatusBar(Dark).dc.html`.
-- `uploads/` (+ `public/uploads/`) — 43 category icons and the Pryvat Sans UI font.
-- `assets/` (+ `public/assets/`) — card art and the Mastercard mark.
-
-React/ReactDOM 18 load from unpkg at runtime — the page needs network access on first
-load. Chart data is generated deterministically; no API calls, no server code.
-
-## Smart Scroll
-
-When on, the cards/envelopes dropdown + chart-type row pins 8px below the nav bar via
-`position: fixed` once scrolled past its natural offset (measured once through the
-offsetParent chain — CSS `position: sticky` doesn't track correctly inside a scaled
-ancestor). A gradient in the nav bar's own colour fades in behind it.
-
-## Free Scroll chart mode
-
-A continuous, bar-by-bar scrollable timeline, pixel-identical at rest to Фіксована
-сітка's geometry per timeframe. See `FREE_META` / `freeOn()` in `index.html`'s logic
-block for the full model (absolute-offset colour keys, shared axis max across
-overlapping windows, `noGrow` on settle — all fixes for issues already resolved).
+- No build step, bundler, or external dependencies (React/ReactDOM are loaded by `support.js` from a CDN at runtime).
+- All relative paths must be preserved exactly as in this folder — `support.js` resolves `StatusBarDark.dc.html` and the asset paths relative to the main file's location.
+- Do not edit `support.js`; it is a generated runtime file.
